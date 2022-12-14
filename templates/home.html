@@ -1,0 +1,62 @@
+<html>
+	<head>
+		<title>Label Printer</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+		body {
+  			background: #555;
+		}
+		input {
+			text-align: center;
+		}
+		button{
+			text-align: center;
+		}
+		textarea {
+			text-align: center;
+			margin: auto;
+			width: 50%;
+			padding: 10px;
+		}
+		.content {
+			text-align: center;
+			max-width: 800px;
+			margin: auto;
+			background: white;
+			padding: 10px;
+		}
+		h1 {
+			max-width: 100%;
+			height: auto;
+		}
+	</style>
+    </head>
+    <body>
+	<div class="content">
+		<h1 >Label Printer</h1>
+		<form method="POST" action="/">
+			<label for="cars">Print History:</label>
+			<select name="id" id="history_id">
+				{% for history in allhistory %}
+                <option value="{{history.id}}" selected>{{history.tarikh}}</option>
+                {% endfor %}
+			</select>
+			<input type="submit" value="View">
+		</form>
+		<form method="POST" action="/print">
+			<p><label for="printText">Print Preview:</label></p>
+			<textarea id="printText" name="printText" rows="10" cols="50">{{printData}}</textarea>
+			<br>
+			<button type="submit" onclick="myFunction()">Print <i class="fa fa-print"></i></button>
+		</form>
+	</div>
+	
+	<script>	
+		function myFunction() {
+		  var preview = document.getElementById("printText")
+		  preview.value += document.getElementById("addtext").value + " \r\n" ;
+		}
+	</script>
+    </body>
+</html>
