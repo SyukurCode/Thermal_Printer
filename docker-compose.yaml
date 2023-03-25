@@ -2,9 +2,10 @@ version: '3.3'
 services:
   app:
     container_name: printer_app
-    build:
-        context: ./
-        dockerfile: Dockerfile
+#    build:
+#        context: ./
+#        dockerfile: Dockerfile
+    image: syukurdocker/thermal_printer:latest
     devices:
         - /dev/usb/lp0:/dev/usb/lp0
     restart: always
