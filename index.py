@@ -1,49 +1,54 @@
 #!/usr/bin/env python
 from escpos import printer
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, jsonify
 import os
 from datetime import datetime
 import json
-from models import db,RawData
+from models import db,RawData,JenisPerniagaan
 import config
 from flask_migrate import Migrate
+import logging
+import printer_machine
 
 migrate = Migrate()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret-key-goes-here'
 app.config['SQLALCHEMY_DATABASE_URI'] = config.DATABASE_CONNECTION_URI
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.app_context().push()
 db.init_app(app)
 migrate.init_app(app, db)
 db.create_all()
 
+machine = printer_machine.Print("/dev/usb/lp0")
+
 @app.route('/print', methods=["POST"])
 def printWrite():
 	if request.method == 'POST':
-		if request.form:
-			printdata = request.form.get("printText")
-			p = printer.File("/dev/usb/lp0")
-			p.set(align="center", width=2)
-			p.text("Pesanan Donut\n")
-			p.set(align="center", text_type="B")
-			p.text(printdata);
-			p.text("\n================\n")
-			p.text("\n\n\n")
-			saveDataToDb(printdata)
+		if not os.path.exists("/dev/usb/lp0"):
+                        return jsonify({'status': 500, 'text': 'Printer not available'})
 
-			return redirect("/")
+		printdata = request.get_json()
+		strPrintData = json.dumps(printdata)
+		response = machine.jobs(printdata)
+
+		if response == False:
+			return jsonify({'status': 500, 'text': 'Data unsucces to print'})
+
+		saveDataToDb(strPrintData)
+		return jsonify({'status': 200, 'text': 'Receipt has been printed'})
 
 @app.route('/', methods=["GET","POST"])
 def index():
 	try:
 		allhistory = RawData.query.all()
+		jenisPerniagaan = JenisPerniagaan.query.all()
 	except Exception as e:
 		allhistory =  ""
 
 	if request.method == 'GET':
-		return render_template("home.html",allhistory=allhistory,printData="")
+		return render_template("index.html",allhistory=allhistory,printData="",jenisPerniagaan=jenisPerniagaan)
 	if request.method == 'POST':
 		if request.form:
 			historyID = request.form.get('id')
@@ -78,4 +83,4 @@ if __name__ == '__main__':
  
     # run() method of Flask class runs the application
     # on the local development server.
-	app.run(host='0.0.0.0', port =5000)
+	app.run(host='0.0.0.0', port=5000, debug=True)

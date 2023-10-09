@@ -1,0 +1,215 @@
+<html>
+	<head>
+		<title>Bill Receipt</title>
+		<!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<style>
+		body {
+  			background-image: url("/static/img/background.jpg");
+		}
+		input {
+			text-align: center;
+		}
+		button{
+			text-align: center;
+		}
+		textarea {
+			text-align: center;
+			margin: auto;
+			width: 50%;
+			padding: 10px;
+		}
+		.content {
+			text-align: center;
+			max-width: 360px;
+			margin: auto;
+			margin-top: 10%;
+			background: white;
+			padding: 10px;
+		}
+		h1 {
+			max-width: 100%;
+			height: auto;
+		}
+		table, th, td {
+		
+			  border: 1px solid black;
+			  border-collapse: collapse;
+		}
+		thead {
+			text-align: center;
+		}
+	</style>
+    </head>
+    <body>
+	<div class="content">
+	
+		<dialog id="dialogItem">
+			<h3>Insert Item</h3>
+				<div style='text-align:left'><label for="item">Item name</label>
+				<input name="item" id="item" maxlength="16"></div><br>
+				<div style='text-align:left'><label for="quantity">Quantity</label>
+				<input type="number" id="quantity" name="quantity" min="0"></div><br>
+				<div><label for="price">Price/unit</label>
+				<input type="number" name="price" value="0.00" id="price" step="0.10" min="0.10"></div><br>
+			<!-- <input id="button" type="button" value=" Reset " onclick="ResetForm()"> -->
+			<input id="button" type="button" value=" Add " onclick="addItem()">
+			<input id="button" type="button" value=" Cancel " onclick="closePickItem()">
+		</dialog>
+		
+		<dialog id="dialogTitle">
+			<h3>Change Title</h3>
+			<div id="titleData">
+				<br> Title
+				<select id="title" name="title" onchange="onSelectTitle(this.value)">
+					<option value="Title">Select Title</option>
+					{% for perniagaan in jenisPerniagaan %}
+                                        <option value="{{perniagaan.name}}" selected>{{perniagaan.name}}</option>
+                                        {% endfor %}
+				</select>
+			</div>
+		</dialog>
+		
+		<div id="tab" >
+		  <h3 id="myTitle" onclick="changeTitle()">Title</h3>
+		  <button onclick="pickItem()" class="btn" style="float: right;"><i class="fa fa-plus" ></i> ADD</button><br><br>
+		  <table id="myTable" cellspacing="0px" style="width:100%" >
+			<thead>
+			  <tr >
+				<td>no.</td>
+				<td>Items</td>
+				<td>Qty</td>
+				<td>RM</td>
+				<td></td>
+			  </tr>
+			</thead>
+			<tbody>
+			</tbody>
+		  </table>
+                  <h3>Total RM<span id="total">0.0</span></h3>
+		  <br><button onclick="sendToPrinter()" class="btn"><i class="fa fa-print"></i> Print</button>
+		</div>
+	</div>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script>	
+		const myItems = document.getElementById("dialogItem"); 
+		const myTitles = document.getElementById("dialogTitle"); 
+		function addItem() {
+		  var rows = "";
+		  var no = document.getElementById("myTable").rows.length;
+		  var items = document.getElementById("item").value;
+		  var qty = document.getElementById("quantity").value;
+		  var price = document.getElementById("price").value;
+		  var rm = price * qty;
+		  
+		  if(items =="" || qty =="" || rm=="")
+		  {
+			  alert("can't insert data because it is empty");
+		  }
+		  else{
+			  rows += "<tr><td style='text-align:center'>" + no + "</td><td style='text-align:center'>" + items + "</td><td style='text-align:center'>" + qty + "</td><td style='text-align:center'>" + rm.toFixed(2) + "</td><td style='text-align:center'><button onclick = deleterow(this)>Delete</button></td></tr>";
+			  $(rows).appendTo("#myTable tbody");
+			  onTotalRM()
+			  ResetForm();
+			  myItems.close(); 
+		  }
+		  
+		}
+
+		function onTotalRM() {
+		  var table = document.getElementById("myTable");
+		  var value = 0.0;
+		  for (var row = 1; row < table.rows.length; row++)
+		  {
+			var tableRow = table.rows[row]; 
+			value = value + parseFloat(tableRow.cells[3].innerHTML);
+		  }
+		  document.getElementById("total").text = 
+		  total.innerText = value.toFixed(2);
+		}
+
+		function onSelectTitle(value) {
+		  document.getElementById("myTitle").text = 
+		  myTitle.innerText = value;
+		  myTitles.close();
+		}
+		
+		function ResetForm() {
+		  document.getElementById("item").value = "";
+		  document.getElementById("quantity").value = "";
+		  document.getElementById("price").value = "";
+		}
+		
+		function sendToPrinter() {
+			var countItems = document.getElementById("myTable").rows.length;
+			var tab = document.getElementById("myTable");
+			var title = document.getElementById("myTitle").text
+			if(countItems == 1 || title === undefined)
+			{	if (countItems == 1) 
+				{
+					alert("nothing to print!");
+				} else {
+					alert("Please click title");
+				}
+			}
+			else
+			{	
+				
+				var tableData = tableToJson(tab);
+				var data = { title : title, item : tableData};
+				const myJSON = JSON.stringify(data);
+				const obj = JSON.parse(myJSON);
+				
+				$.ajax({
+				type: 'post',
+				url: '/print',
+				data: myJSON,
+				contentType: "application/json; charset=utf-8",
+				dataType: 'json',
+				traditional: true,
+				success: function(data){
+					console.log(data.text)
+					alert(data.text)
+				}
+        		});
+				
+			}
+		}
+
+		function deleterow(el) {
+		  $(el).closest('tr').remove();
+		  onTotalRM()
+		}
+		
+		function pickItem() { 
+		  myItems.show(); 
+		} 
+		function closePickItem() { 
+		  myItems.close(); 
+		} 
+		
+		function changeTitle() { 
+		  myTitles.show(); 
+		} 
+		function closeChangeTitle() { 
+		  myTitles.show(); 
+		}
+		
+		function tableToJson(table) { 
+			var data = [];
+			for (var i = 1; i < table.rows.length; i++) { 
+				var tableRow = table.rows[i]; 
+				var rowData = []; 
+				for (var j = 0; j < tableRow.cells.length-1; j++) { 
+					rowData.push(tableRow.cells[j].innerHTML);
+				} 
+				data.push(rowData); 
+			} 
+			return data;
+		}
+	</script>
+    </body>
+</html>
