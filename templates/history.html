@@ -1,0 +1,167 @@
+<html>
+	<head>
+				<title>Bill Receipt</title>
+		<!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+	<style>
+		body {
+  			background-image: url("/static/img/background.jpg");
+		}
+		input {
+			text-align: center;
+		}
+		button{
+			text-align: center;
+		}
+		textarea {
+			text-align: center;
+			margin: auto;
+			width: 50%;
+			padding: 10px;
+		}
+		.content {
+			text-align: center;
+			max-width: 360px;
+			margin: auto;
+			margin-top: 10%;
+			background: white;
+			padding: 10px;
+		}
+		h1 {
+			max-width: 100%;
+			height: auto;
+		}
+		table, th, td {
+		
+			  border: 1px solid black;
+			  border-collapse: collapse;
+		}
+		thead {
+			text-align: center;
+		}
+	</style>
+    </head>
+    <body>
+	<div class="content">
+		<label for="cars">Print History:</label>
+		<select name="id" id="history_id" onchange="onSelectData(this.value)" onload="onSelectData(this.value)">
+			{% for history in allhistory %}
+			<option value="{{history.data}}" selected>{{history.tarikh}}</option>
+			{% endfor %}
+		</select>
+		<h3 id="myTitle" >Select title here</h3>
+		  <table id="myTable" cellspacing="0px" style="width:100%" >
+			<thead>
+			  <tr >
+				<td>no.</td>
+				<td>Items</td>
+				<td>Qty</td>
+				<td>RM</td>
+				<td></td>
+			  </tr>
+			</thead>
+			<tbody>
+			</tbody>
+		  </table>
+                  <h3>Total RM<span id="total">0.0</span></h3>
+		  <div class="btn-group">
+			<br><a href="/"><button class="btn"><i class="fa fa-caret-left"></i> Back</button></a>
+		    <br><button onclick="sendToPrinter()" class="btn margin-right" style="inline-block;"><i class="fa fa-print"></i> Print</button>
+		  </div>
+	</div>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script>	
+		function onSelectData(data) {
+			reset_table();
+			var tab = document.getElementById("myTable");
+			const obj = JSON.parse(data);
+			
+			document.getElementById("myTitle").text = 
+			myTitle.innerText = obj.title;
+			
+		
+			var rows = "";
+			for(var i=0; i<obj.item.length;i++){
+				if(i == 0) rows = "";
+				var no = obj.item[i][0];
+				var items = obj.item[i][1];
+				var qty = obj.item[i][2];
+				var rm = obj.item[i][3];
+			  
+				rows += "<tr><td style='text-align:center'>" + no + "</td><td style='text-align:center'>" + items + "</td><td style='text-align:center'>" + qty + "</td><td style='text-align:center'>" + rm + "</td><td style='text-align:center'><button onclick = 'deleterow(this)' disabled>Delete</button></td></tr>";
+				$(rows).appendTo("#myTable tbody");
+				onTotalRM();
+				rows = "";
+			}
+		}
+		function sendToPrinter() {
+			var countItems = document.getElementById("myTable").rows.length;
+			var tab = document.getElementById("myTable");
+			var title = document.getElementById("myTitle").text
+			if(countItems == 1 || title === undefined)
+			{	if (countItems == 1) 
+				{
+					alert("nothing to print!");
+				} else {
+					alert("Please click title");
+				}
+			}
+			else
+			{	
+				var tableData = tableToJson(tab);
+				var data = { title : title, item : tableData};
+				const myJSON = JSON.stringify(data);
+				const obj = JSON.parse(myJSON);
+				
+				$.ajax({
+				type: 'post',
+				url: '/reprint',
+				data: myJSON,
+				contentType: "application/json; charset=utf-8",
+				dataType: 'json',
+				traditional: true,
+				success: function(data){
+					console.log(data.text)
+					alert(data.text)
+				}
+        		});
+				
+			}
+		}
+		function tableToJson(table) { 
+			var data = [];
+			for (var i = 1; i < table.rows.length; i++) { 
+				var tableRow = table.rows[i]; 
+				var rowData = []; 
+				for (var j = 0; j < tableRow.cells.length-1; j++) { 
+					rowData.push(tableRow.cells[j].innerHTML);
+				} 
+				data.push(rowData); 
+			} 
+			return data;
+		}
+		function onTotalRM() {
+		  var table = document.getElementById("myTable");
+		  var value = 0.0;
+		  for (var row = 1; row < table.rows.length; row++)
+		  {
+			var tableRow = table.rows[row]; 
+			value = value + parseFloat(tableRow.cells[3].innerHTML);
+		  }
+		  document.getElementById("total").text = 
+		  total.innerText = value.toFixed(2);
+		}
+		function reset_table(){
+			$('#myTable tbody').empty();
+		}
+	</script>
+    </body>
+</html>

@@ -3,8 +3,13 @@
 		<title>Bill Receipt</title>
 		<!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
         <meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
 	<style>
 		body {
   			background-image: url("/static/img/background.jpg");
@@ -64,7 +69,6 @@
 			<div id="titleData">
 				<br> Title
 				<select id="title" name="title" onchange="onSelectTitle(this.value)">
-					<option value="Title">Select Title</option>
 					{% for perniagaan in jenisPerniagaan %}
                                         <option value="{{perniagaan.name}}" selected>{{perniagaan.name}}</option>
                                         {% endfor %}
@@ -73,7 +77,7 @@
 		</dialog>
 		
 		<div id="tab" >
-		  <h3 id="myTitle" onclick="changeTitle()">Title</h3>
+		  <h3 id="myTitle" onclick="changeTitle()">Select title here</h3>
 		  <button onclick="pickItem()" class="btn" style="float: right;"><i class="fa fa-plus" ></i> ADD</button><br><br>
 		  <table id="myTable" cellspacing="0px" style="width:100%" >
 			<thead>
@@ -89,7 +93,11 @@
 			</tbody>
 		  </table>
                   <h3>Total RM<span id="total">0.0</span></h3>
-		  <br><button onclick="sendToPrinter()" class="btn"><i class="fa fa-print"></i> Print</button>
+		  <div class="btn-group">
+			<br><a href="/history"><button class="btn"><i class="fa fa-history"></i> History</button></a>
+		    <br><button onclick="sendToPrinter()" class="btn margin-right" style="inline-block;"><i class="fa fa-print"></i> Print</button>
+		    <br><button onclick="sendToDb()" class="btn"><i class="fa fa-save"></i> Save</button>
+		  </div>
 		</div>
 	</div>
 	
@@ -178,24 +186,58 @@
 				
 			}
 		}
+		function sendToDb() {
+                        var countItems = document.getElementById("myTable").rows.length;
+                        var tab = document.getElementById("myTable");
+                        var title = document.getElementById("myTitle").text
+                        if(countItems == 1 || title === undefined)
+                        {       if (countItems == 1)
+                                {
+                                        alert("nothing to save!");
+                                } else {
+                                        alert("Please click title");
+                                }
+                        }
+                        else
+                        {
 
+                                var tableData = tableToJson(tab);
+                                var data = { title : title, item : tableData};
+                                const myJSON = JSON.stringify(data);
+                                const obj = JSON.parse(myJSON);
+
+                                $.ajax({
+                                type: 'post',
+                                url: '/save',
+                                data: myJSON,
+                                contentType: "application/json; charset=utf-8",
+                                dataType: 'json',
+                                traditional: true,
+                                success: function(data){
+                                        console.log(data.text)
+                                        alert(data.text)
+                                }
+                        });
+
+                        }
+                }
 		function deleterow(el) {
 		  $(el).closest('tr').remove();
 		  onTotalRM()
 		}
 		
 		function pickItem() { 
-		  myItems.show(); 
+		  myItems.showModal(); 
 		} 
 		function closePickItem() { 
 		  myItems.close(); 
 		} 
 		
 		function changeTitle() { 
-		  myTitles.show(); 
+		  myTitles.showModal(); 
 		} 
 		function closeChangeTitle() { 
-		  myTitles.show(); 
+		  myTitles.close(); 
 		}
 		
 		function tableToJson(table) { 

@@ -6,8 +6,8 @@ services:
         context: ./
         dockerfile: Dockerfile
 #    image: syukurdocker/thermal_printer:latest
-    devices:
-        - /dev/usb/lp0:/dev/usb/lp0
+#    devices:
+#        - /dev/usb/lp0:/dev/usb/lp0
     restart: always
     ports:
         - '5001:5000'
