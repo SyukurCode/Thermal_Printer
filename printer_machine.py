@@ -7,29 +7,27 @@ logging.basicConfig(level=logging.DEBUG)
 now = datetime.now()
 class Print:
 	_printerFile = None
-	_no = ["no."]
-	_items = ["Items"]
-	_qty = ["Qty"]
-	_rm = ["RM"]
-	_total_rm = 0
 
 	def __init__(self,printerFile):
 		self._printerFile = printerFile
 
 	def jobs(self,data):
+		_items = ["Items"]
+		_qty = ["Qty"]
+		_rm = ["RM"]
+		_total_rm = 0
 		#logging.debug(data)
 		title = data['title'].replace(" ","\n")
 		for item in data["item"]:
-			self._no.append(item[0] + '.')
 			itemTrim = item[1].replace("&amp;","&")
-			self._items.append(itemTrim)
-			self._qty.append(item[2])
-			self._rm.append(item[3])
-			self._total_rm = self._total_rm + float(item[3])
+			_items.append(itemTrim)
+			_qty.append(item[0])
+			_rm.append(item[2])
+			_total_rm = _total_rm + (float(item[2]) * float(item[0]))
 
-		return self.printLayout(title)
+		return self.printLayout(title,_qty,_items,_rm,_total_rm)
 
-	def printLayout(self,title):
+	def printLayout(self,title,_qty,_items,_rm,_total_rm):
 		try:
 			# setup printer
 			p = printer.File(self._printerFile)
@@ -43,7 +41,7 @@ class Print:
 			p.text("*" * 30 + "\n")
 
 			# setup layout body
-			table = zip(self._no, self._items, self._qty, self._rm)
+			table = zip(_qty, _items, _rm)
 			p.text(tabulate(table, colalign=("right",),tablefmt="plain"))
 			p.text("\n")
 
@@ -51,7 +49,7 @@ class Print:
 			p.set(align="left", text_type="B")
 			p.text("-" * 30 + "\n")
 			p.set(align="left", width=2)
-			table = [["","TOTAL","","{:.2f}".format(self._total_rm)]]
+			table = [["","TOTAL","",round(_total_rm,2)]]
 			p.text(tabulate(table ,colalign=("right",),tablefmt="plain"))
 			p.text("\n")
 			p.set(align="left", text_type="B")

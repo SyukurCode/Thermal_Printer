@@ -50,7 +50,6 @@ def rePrintWrite():
                         return jsonify({'status': 500, 'text': 'Printer not available'})
 
                 printdata = request.get_json()
-                strPrintData = json.dumps(printdata)
                 response = machine.jobs(printdata)
 
                 if response == False:
@@ -61,7 +60,7 @@ def rePrintWrite():
 def save():
 	if request.method == 'POST':
 		savedata = request.get_json()
-		strSaveData = json.dumps(saveData)
+		strSaveData = json.dumps(savedata)
 
 		saveDataToDb(strSaveData)
 		return jsonify({'status': 200, 'text': 'Data was saved.'})

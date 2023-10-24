@@ -1,8 +1,5 @@
 import os
-
-from dotenv import load_dotenv
-load_dotenv()
-
+X
 user = os.environ['POSTGRES_USER']
 password = os.environ['POSTGRES_PASSWORD']
 host = os.environ['POSTGRES_HOST']

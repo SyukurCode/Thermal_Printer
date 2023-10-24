@@ -50,7 +50,6 @@
     </head>
     <body>
 	<div class="content">
-	
 		<dialog id="dialogItem">
 			<h3>Insert Item</h3>
 				<div style='text-align:left'><label for="item">Item name</label>
@@ -74,6 +73,7 @@
                                         {% endfor %}
 				</select>
 			</div>
+			<br><input id="button" type="button" value=" Cancel " onclick="closeChangeTitle()">
 		</dialog>
 		
 		<div id="tab" >
@@ -82,10 +82,9 @@
 		  <table id="myTable" cellspacing="0px" style="width:100%" >
 			<thead>
 			  <tr >
-				<td>no.</td>
-				<td>Items</td>
-				<td>Qty</td>
-				<td>RM</td>
+				<td><b>Qty</b></td>
+				<td style="width:50%"><b>Items</b></td>
+				<td><b>RM</b></td>
 				<td></td>
 			  </tr>
 			</thead>
@@ -111,14 +110,14 @@
 		  var items = document.getElementById("item").value;
 		  var qty = document.getElementById("quantity").value;
 		  var price = document.getElementById("price").value;
-		  var rm = price * qty;
+		  var rm = parseFloat(price)
 		  
 		  if(items =="" || qty =="" || rm=="")
 		  {
 			  alert("can't insert data because it is empty");
 		  }
 		  else{
-			  rows += "<tr><td style='text-align:center'>" + no + "</td><td style='text-align:center'>" + items + "</td><td style='text-align:center'>" + qty + "</td><td style='text-align:center'>" + rm.toFixed(2) + "</td><td style='text-align:center'><button onclick = deleterow(this)>Delete</button></td></tr>";
+			  rows += "<tr><td style='text-align:center'>" + qty + "</td><td style='text-align:left;padding-left: 15px;'>" + items + "</td><td style='text-align:center'>" + rm.toFixed(2) + "</td><td style='text-align:center'><button onclick = deleterow(this)><i class='fa fa-trash'></button></td></tr>";
 			  $(rows).appendTo("#myTable tbody");
 			  onTotalRM()
 			  ResetForm();
@@ -133,7 +132,7 @@
 		  for (var row = 1; row < table.rows.length; row++)
 		  {
 			var tableRow = table.rows[row]; 
-			value = value + parseFloat(tableRow.cells[3].innerHTML);
+			value = value + parseFloat(tableRow.cells[2].innerHTML) * parseFloat(tableRow.cells[0].innerHTML);
 		  }
 		  document.getElementById("total").text = 
 		  total.innerText = value.toFixed(2);
@@ -172,55 +171,58 @@
 				const obj = JSON.parse(myJSON);
 				
 				$.ajax({
-				type: 'post',
-				url: '/print',
-				data: myJSON,
-				contentType: "application/json; charset=utf-8",
-				dataType: 'json',
-				traditional: true,
-				success: function(data){
-					console.log(data.text)
-					alert(data.text)
-				}
+					type: 'post',
+					url: '/print',
+					data: myJSON,
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					traditional: true,
+					success: function(data){
+						alert(data.text)
+						if(data.status == 200){
+							reset_table();
+						}
+					}
         		});
-				
 			}
+			
 		}
 		function sendToDb() {
-                        var countItems = document.getElementById("myTable").rows.length;
-                        var tab = document.getElementById("myTable");
-                        var title = document.getElementById("myTitle").text
-                        if(countItems == 1 || title === undefined)
-                        {       if (countItems == 1)
-                                {
-                                        alert("nothing to save!");
-                                } else {
-                                        alert("Please click title");
-                                }
-                        }
-                        else
-                        {
+			var countItems = document.getElementById("myTable").rows.length;
+			var tab = document.getElementById("myTable");
+			var title = document.getElementById("myTitle").text
+			if(countItems == 1 || title === undefined)
+			{       if (countItems == 1)
+					{
+							alert("nothing to save!");
+					} else {
+							alert("Please click title");
+					}
+			}
+			else
+			{
 
-                                var tableData = tableToJson(tab);
-                                var data = { title : title, item : tableData};
-                                const myJSON = JSON.stringify(data);
-                                const obj = JSON.parse(myJSON);
+				var tableData = tableToJson(tab);
+				var data = { title : title, item : tableData};
+				const myJSON = JSON.stringify(data);
+				const obj = JSON.parse(myJSON);
 
-                                $.ajax({
-                                type: 'post',
-                                url: '/save',
-                                data: myJSON,
-                                contentType: "application/json; charset=utf-8",
-                                dataType: 'json',
-                                traditional: true,
-                                success: function(data){
-                                        console.log(data.text)
-                                        alert(data.text)
-                                }
-                        });
-
-                        }
-                }
+				$.ajax({
+					type: 'post',
+					url: '/save',
+					data: myJSON,
+					contentType: "application/json; charset=utf-8",
+					dataType: 'json',
+					traditional: true,
+					success: function(data){
+						alert(data.text)
+						if(data.status == 200){
+							reset_table();
+						}
+					}
+				});
+			}
+	    }
 		function deleterow(el) {
 		  $(el).closest('tr').remove();
 		  onTotalRM()
@@ -251,6 +253,9 @@
 				data.push(rowData); 
 			} 
 			return data;
+		}
+		function reset_table(){
+			$('#myTable tbody').empty();
 		}
 	</script>
     </body>

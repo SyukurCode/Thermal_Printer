@@ -1,6 +1,6 @@
 <html>
 	<head>
-				<title>Bill Receipt</title>
+		<title>Bill Receipt</title>
 		<!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
         <meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -50,38 +50,42 @@
     </head>
     <body>
 	<div class="content">
-		<label for="cars">Print History:</label>
-		<select name="id" id="history_id" onchange="onSelectData(this.value)" onload="onSelectData(this.value)">
-			{% for history in allhistory %}
-			<option value="{{history.data}}" selected>{{history.tarikh}}</option>
-			{% endfor %}
-		</select>
-		<h3 id="myTitle" >Select title here</h3>
-		  <table id="myTable" cellspacing="0px" style="width:100%" >
-			<thead>
-			  <tr >
-				<td>no.</td>
-				<td>Items</td>
-				<td>Qty</td>
-				<td>RM</td>
-				<td></td>
-			  </tr>
-			</thead>
-			<tbody>
-			</tbody>
-		  </table>
-                  <h3>Total RM<span id="total">0.0</span></h3>
-		  <div class="btn-group">
-			<br><a href="/"><button class="btn"><i class="fa fa-caret-left"></i> Back</button></a>
-		    <br><button onclick="sendToPrinter()" class="btn margin-right" style="inline-block;"><i class="fa fa-print"></i> Print</button>
-		  </div>
+		
+			<label for="cars">Print History:</label>
+			<select name="history" id="history" >
+				{% for history in allhistory %}
+				<option value="{{history.data}}" selected>{{history.tarikh}}</option>
+				{% endfor %}
+			</select>
+			<button class="btn" onclick="onSelectData()"><i class="fa fa-display"></i><b>View</b></button>
+			<div id="tab">
+			<h3 id="myTitle" >Select title here</h3>
+			<table id="myTable" cellspacing="0px" style="width:100%" >
+				<thead>
+				  <tr >
+					<td><b>Qty</b></td>
+					<td style="width:50%"><b>Items</b></td>
+					<td><b>RM</b></td>
+					<td></td>
+				  </tr>
+				</thead>
+				<tbody>
+				</tbody>
+			</table>
+			  <h3>Total RM<span id="total">0.0</span></h3>
+			  <div class="btn-group">
+				<br><a href="/"><button class="btn"><i class="fa fa-caret-left"></i> Back</button></a>
+				<br><button onclick="sendToPrinter()" class="btn margin-right" style="inline-block;"><i class="fa fa-print"></i> Print</button>
+			  </div>
+		</div>
 	</div>
 	
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 	<script>	
-		function onSelectData(data) {
+		function onSelectData() {
 			reset_table();
 			var tab = document.getElementById("myTable");
+			var data = document.getElementById("history").value;
 			const obj = JSON.parse(data);
 			
 			document.getElementById("myTitle").text = 
@@ -91,12 +95,12 @@
 			var rows = "";
 			for(var i=0; i<obj.item.length;i++){
 				if(i == 0) rows = "";
-				var no = obj.item[i][0];
+				//var no = obj.item[i][0];
 				var items = obj.item[i][1];
-				var qty = obj.item[i][2];
-				var rm = obj.item[i][3];
+				var qty = obj.item[i][0];
+				var rm = obj.item[i][2];
 			  
-				rows += "<tr><td style='text-align:center'>" + no + "</td><td style='text-align:center'>" + items + "</td><td style='text-align:center'>" + qty + "</td><td style='text-align:center'>" + rm + "</td><td style='text-align:center'><button onclick = 'deleterow(this)' disabled>Delete</button></td></tr>";
+				rows += "<tr><td style='text-align:center'>" + qty + "</td><td style='text-align:left;padding-left: 15px;'>" + items + "</td><td style='text-align:center'>" + rm + "</td><td style='text-align:center'><button onclick = 'deleterow(this)' disabled><i class='fa fa-trash'></i></button></td></tr>";
 				$(rows).appendTo("#myTable tbody");
 				onTotalRM();
 				rows = "";
@@ -119,7 +123,6 @@
 				var tableData = tableToJson(tab);
 				var data = { title : title, item : tableData};
 				const myJSON = JSON.stringify(data);
-				const obj = JSON.parse(myJSON);
 				
 				$.ajax({
 				type: 'post',
@@ -129,7 +132,6 @@
 				dataType: 'json',
 				traditional: true,
 				success: function(data){
-					console.log(data.text)
 					alert(data.text)
 				}
         		});
@@ -154,7 +156,7 @@
 		  for (var row = 1; row < table.rows.length; row++)
 		  {
 			var tableRow = table.rows[row]; 
-			value = value + parseFloat(tableRow.cells[3].innerHTML);
+			value = value + parseFloat(tableRow.cells[2].innerHTML) * parseFloat(tableRow.cells[0].innerHTML);
 		  }
 		  document.getElementById("total").text = 
 		  total.innerText = value.toFixed(2);

@@ -8,6 +8,12 @@ services:
 #    image: syukurdocker/thermal_printer:latest
 #    devices:
 #        - /dev/usb/lp0:/dev/usb/lp0
+    environment:
+        - POSTGRES_USER=admin
+        - POSTGRES_PASSWORD=syukur123***
+        - POSTGRES_HOST=192.168.0.88
+        - POSTGRES_PORT=5432
+        - POSTGRES_DB=PerniagaanDonut
     restart: always
     ports:
         - '5001:5000'
