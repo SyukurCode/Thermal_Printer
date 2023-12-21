@@ -55,11 +55,13 @@
 			<select name="history" id="history" >
 				{% for history in allhistory %}
 				<option value="{{history.data}}" selected>{{history.tarikh}}</option>
+                                {% else %}
+				<option value="">No History</option>
 				{% endfor %}
 			</select>
 			<button class="btn" onclick="onSelectData()"><i class="fa fa-display"></i><b>View</b></button>
 			<div id="tab">
-			<h3 id="myTitle" >Select title here</h3>
+			<h3 id="myTitle" ></h3>
 			<table id="myTable" cellspacing="0px" style="width:100%" >
 				<thead>
 				  <tr >
@@ -167,3 +169,4 @@
 	</script>
     </body>
 </html>
+

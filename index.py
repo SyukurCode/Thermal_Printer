@@ -9,6 +9,8 @@ import config
 from flask_migrate import Migrate
 import logging
 import printer_machine
+logging.basicConfig(filename='/var/log/thermal_printer.log',filemode='a',datefmt='%d-%m-%Y %H:%M:%S',format='%(asctime)s %(levelname)s: %(message)s')
+logging.getLogger().setLevel(logging.DEBUG)
 
 migrate = Migrate()
 
@@ -31,31 +33,36 @@ def favicon():
 def printWrite():
 	if request.method == 'POST':
 		if not os.path.exists("/dev/usb/lp0"):
-                        return jsonify({'status': 500, 'text': 'Printer not available'})
+			logging.error("printer not available at /dev/usb/lp0")
+			return jsonify({'status': 500, 'text': 'Printer not available'})
 
 		printdata = request.get_json()
 		strPrintData = json.dumps(printdata)
 		response = machine.jobs(printdata)
 
 		if response == False:
+			logging.error("printer fail to print")
 			return jsonify({'status': 500, 'text': 'Data unsucces to print'})
 
 		saveDataToDb(strPrintData)
+		logging.info("Receipt succesfully printed")
 		return jsonify({'status': 200, 'text': 'Receipt has been printed'})
 
 @app.route('/reprint', methods=["POST"])
 def rePrintWrite():
-        if request.method == 'POST':
-                if not os.path.exists("/dev/usb/lp0"):
-                        return jsonify({'status': 500, 'text': 'Printer not available'})
+	if request.method == 'POST':
+		if not os.path.exists("/dev/usb/lp0"):
+			logging.error("printer not available at /dev/usb/lp0")
+			return jsonify({'status': 500, 'text': 'Printer not available'})
+		printdata = request.get_json()
+		response = machine.jobs(printdata)
 
-                printdata = request.get_json()
-                response = machine.jobs(printdata)
+		if response == False:
+			logging.error("printer fail to print")
+			return jsonify({'status': 500, 'text': 'Data unsucces to print'})
 
-                if response == False:
-                        return jsonify({'status': 500, 'text': 'Data unsucces to print'})
-
-                return jsonify({'status': 200, 'text': 'Receipt has been printed'})
+		logging.info("Receipt succesfully re-printed")
+		return jsonify({'status': 200, 'text': 'Receipt has been printed'})
 @app.route('/save', methods=["POST"])
 def save():
 	if request.method == 'POST':
@@ -63,6 +70,7 @@ def save():
 		strSaveData = json.dumps(savedata)
 
 		saveDataToDb(strSaveData)
+		logging.info("Receipt succesfully saved to database")
 		return jsonify({'status': 200, 'text': 'Data was saved.'})
 
 @app.route('/', methods=["GET"])
@@ -70,6 +78,7 @@ def index():
 	try:
 		jenisPerniagaan = JenisPerniagaan.query.all()
 	except Exception as e:
+		logging.error("fail to get data " + e)
 		write("Error: " + e)
 
 	if request.method == 'GET':
@@ -81,6 +90,7 @@ def history():
 		allhistory = RawData.query.all()
 	except Exception as e:
 		allhistory = ""
+		logging.error("fail to get data " + e)
 		writeLogs("Error: " + e)
 
 	if request.method == 'GET':
@@ -105,7 +115,6 @@ def writeLogs(text):
 
 # main driver function
 if __name__ == '__main__':
- 
     # run() method of Flask class runs the application
     # on the local development server.
-	app.run(host='0.0.0.0', port=5000, debug=True)
+	app.run(host='0.0.0.0', port=5000, debug=False)

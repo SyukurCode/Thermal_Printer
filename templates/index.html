@@ -58,7 +58,6 @@
 				<input type="number" id="quantity" name="quantity" min="0"></div><br>
 				<div><label for="price">Price/unit</label>
 				<input type="number" name="price" value="0.00" id="price" step="0.10" min="0.10"></div><br>
-			<!-- <input id="button" type="button" value=" Reset " onclick="ResetForm()"> -->
 			<input id="button" type="button" value=" Add " onclick="addItem()">
 			<input id="button" type="button" value=" Cancel " onclick="closePickItem()">
 		</dialog>
@@ -67,13 +66,13 @@
 			<h3>Change Title</h3>
 			<div id="titleData">
 				<br> Title
-				<select id="title" name="title" onchange="onSelectTitle(this.value)">
+				<select id="title" name="title" onclick="onSelectTitle(this.value)">
 					{% for perniagaan in jenisPerniagaan %}
                                         <option value="{{perniagaan.name}}" selected>{{perniagaan.name}}</option>
                                         {% endfor %}
 				</select>
 			</div>
-			<br><input id="button" type="button" value=" Cancel " onclick="closeChangeTitle()">
+			<br><input id="button" type="button" value=" OK " onclick="closeChangeTitle()">
 		</dialog>
 		
 		<div id="tab" >
@@ -138,10 +137,9 @@
 		  total.innerText = value.toFixed(2);
 		}
 
-		function onSelectTitle(value) {
+		function onSelectTitle(title) {
 		  document.getElementById("myTitle").text = 
-		  myTitle.innerText = value;
-		  myTitles.close();
+		  myTitle.innerText = title;
 		}
 		
 		function ResetForm() {
@@ -238,7 +236,7 @@
 		function changeTitle() { 
 		  myTitles.showModal(); 
 		} 
-		function closeChangeTitle() { 
+		function closeChangeTitle() {
 		  myTitles.close(); 
 		}
 		

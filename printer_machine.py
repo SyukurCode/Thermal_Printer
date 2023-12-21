@@ -2,8 +2,8 @@ from tabulate import tabulate
 from escpos import printer
 from datetime import datetime
 import logging
-
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(filename='/var/log/thermal_printer.log',filemode='a',datefmt='%d-%m-%Y %H:%M:%S',format='%(asctime)s %(levelname)s: %(message)s')
+logging.getLogger().setLevel(logging.DEBUG)
 now = datetime.now()
 class Print:
 	_printerFile = None
@@ -16,7 +16,7 @@ class Print:
 		_qty = ["Qty"]
 		_rm = ["RM"]
 		_total_rm = 0
-		#logging.debug(data)
+		logging.debug(data)
 		title = data['title'].replace(" ","\n")
 		for item in data["item"]:
 			itemTrim = item[1].replace("&amp;","&")

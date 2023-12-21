@@ -12,3 +12,4 @@ class JenisPerniagaan(db.Model):
     __tablename__ = 'JenisPerniagaan'
     id = db.Column(db.Integer, primary_key=True, unique=True)
     name = db.Column(db.String(1000))
+    phone = db.Column(db.String(9))

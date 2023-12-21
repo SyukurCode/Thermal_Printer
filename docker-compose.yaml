@@ -13,7 +13,7 @@ services:
         - POSTGRES_PASSWORD=syukur123***
         - POSTGRES_HOST=192.168.0.88
         - POSTGRES_PORT=5432
-        - POSTGRES_DB=PerniagaanDonut
+        - POSTGRES_DB=PerniagaanDonut_dev
     restart: always
     ports:
         - '5001:5000'
