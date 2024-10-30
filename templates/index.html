@@ -182,8 +182,14 @@
 						}
 					},
 					error: function(xhr, status, error){
-						alert("Fail to print " + xhr.data.text)
-
+						let errorMessage;
+						// Check if the server responded with JSON data
+						if (xhr.responseJSON && xhr.responseJSON.text) {
+							errorMessage = xhr.responseJSON.text;  // Server error message in JSON format
+							alert("Fail to print " + errorMessage)
+						} else {
+							errorMessage = xhr.responseText || "An unknown error occurred.";  // Fallback to plain text or default message
+						}
 					}
         		});
 			}
@@ -203,7 +209,6 @@
 			}
 			else
 			{
-
 				var tableData = tableToJson(tab);
 				var data = { title : title, item : tableData};
 				const myJSON = JSON.stringify(data);
@@ -220,6 +225,14 @@
 						alert(data.text)
 						if(data.status == 200){
 							reset_table();
+						}
+					},
+					error: function(xhr, status, error){
+						if (xhr.responseJSON && xhr.responseJSON.text) {
+							errorMessage = xhr.responseJSON.text;  // Server error message in JSON format
+							alert("Fail to save " + errorMessage)
+						} else {
+							errorMessage = xhr.responseText || "An unknown error occurred.";  // Fallback to plain text or default message
 						}
 					}
 				});

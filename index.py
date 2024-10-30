@@ -67,7 +67,9 @@ def save():
 		savedata = request.get_json()
 		strSaveData = json.dumps(savedata)
 
-		saveDataToDb(strSaveData)
+		isOk = saveDataToDb(strSaveData)
+		if not isOk:
+			return jsonify({'status': 500, 'text': 'Data was not saved.'}),500
 		logger.info("Receipt succesfully saved to database")
 		return jsonify({'status': 200, 'text': 'Data was saved.'}),201
 
@@ -77,7 +79,6 @@ def index():
 		jenisPerniagaan = JenisPerniagaan.query.all()
 	except Exception as e:
 		logger.error("fail to get data " + e)
-		writeLogs("Error: " + e)
 
 	if request.method == 'GET':
 		return render_template("index.html",jenisPerniagaan=jenisPerniagaan)
@@ -89,7 +90,6 @@ def history():
 	except Exception as e:
 		allhistory = ""
 		logger.error("fail to get data " + e)
-		writeLogs("Error: " + e)
 
 	if request.method == 'GET':
 		return render_template("history.html",allhistory=allhistory)
@@ -102,17 +102,16 @@ def saveDataToDb(text):
 			newData = RawData(tarikh=today,data=text)
 			db.session.add(newData)
 			db.session.commit()
-			writeLogs(today + ":Data saved\n")
+			logger.info(today + ":Data saved\n")
+			return True
 		except Exception as e:
-			writeLogs(today + ":Db not found\n")
-
-def writeLogs(text):
-	file = open("app.log", "a")  # append mode
-	file.write(text)
-	file.close()
+			logger.error(today + ":Db not found\n")
+	return False
 
 # main driver function
 if __name__ == '__main__':
     # run() method of Flask class runs the application
     # on the local development server.
-	app.run(host='0.0.0.0', port=5000, debug=False)
+	from waitress import serve # type: ignore
+	serve(app, host="0.0.0.0", port=5000)
+	#app.run(host='0.0.0.0', port=5000, debug=False)
