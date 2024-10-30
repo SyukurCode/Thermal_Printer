@@ -1,6 +1,4 @@
-#!/usr/bin/env python
-from escpos import printer
-from flask import Flask, render_template, request, redirect, jsonify, url_for
+from flask import Flask, render_template, request, redirect, jsonify, send_from_directory, url_for
 import os
 from datetime import datetime
 import json
@@ -9,8 +7,8 @@ import config
 from flask_migrate import Migrate
 import logging
 import printer_machine
-logging.basicConfig(filename='/var/log/thermal_printer.log',filemode='a',datefmt='%d-%m-%Y %H:%M:%S',format='%(asctime)s %(levelname)s: %(message)s')
-logging.getLogger().setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 migrate = Migrate()
 
@@ -33,36 +31,36 @@ def favicon():
 def printWrite():
 	if request.method == 'POST':
 		if not os.path.exists("/dev/usb/lp0"):
-			logging.error("printer not available at /dev/usb/lp0")
-			return jsonify({'status': 500, 'text': 'Printer not available'})
+			logger.error("printer not available at /dev/usb/lp0")
+			return jsonify({'status': 500, 'text': 'Printer not available'}),500
 
 		printdata = request.get_json()
 		strPrintData = json.dumps(printdata)
 		response = machine.jobs(printdata)
 
 		if response == False:
-			logging.error("printer fail to print")
-			return jsonify({'status': 500, 'text': 'Data unsucces to print'})
+			logger.error("printer fail to print")
+			return jsonify({'status': 500, 'text': 'Data unsucces to print'}),400
 
 		saveDataToDb(strPrintData)
-		logging.info("Receipt succesfully printed")
-		return jsonify({'status': 200, 'text': 'Receipt has been printed'})
+		logger.info("Receipt succesfully printed")
+		return jsonify({'status': 200, 'text': 'Receipt has been printed'}),200
 
 @app.route('/reprint', methods=["POST"])
 def rePrintWrite():
 	if request.method == 'POST':
 		if not os.path.exists("/dev/usb/lp0"):
-			logging.error("printer not available at /dev/usb/lp0")
-			return jsonify({'status': 500, 'text': 'Printer not available'})
+			logger.error("printer not available at /dev/usb/lp0")
+			return jsonify({'status': 500, 'text': 'Printer not available'}),500
 		printdata = request.get_json()
 		response = machine.jobs(printdata)
 
 		if response == False:
-			logging.error("printer fail to print")
-			return jsonify({'status': 500, 'text': 'Data unsucces to print'})
+			logger.error("printer fail to print")
+			return jsonify({'status': 500, 'text': 'Data unsucces to print'}),500
 
-		logging.info("Receipt succesfully re-printed")
-		return jsonify({'status': 200, 'text': 'Receipt has been printed'})
+		logger.info("Receipt succesfully re-printed")
+		return jsonify({'status': 200, 'text': 'Receipt has been printed'}),200
 @app.route('/save', methods=["POST"])
 def save():
 	if request.method == 'POST':
@@ -70,16 +68,16 @@ def save():
 		strSaveData = json.dumps(savedata)
 
 		saveDataToDb(strSaveData)
-		logging.info("Receipt succesfully saved to database")
-		return jsonify({'status': 200, 'text': 'Data was saved.'})
+		logger.info("Receipt succesfully saved to database")
+		return jsonify({'status': 200, 'text': 'Data was saved.'}),201
 
 @app.route('/', methods=["GET"])
 def index():
 	try:
 		jenisPerniagaan = JenisPerniagaan.query.all()
 	except Exception as e:
-		logging.error("fail to get data " + e)
-		write("Error: " + e)
+		logger.error("fail to get data " + e)
+		writeLogs("Error: " + e)
 
 	if request.method == 'GET':
 		return render_template("index.html",jenisPerniagaan=jenisPerniagaan)
@@ -90,7 +88,7 @@ def history():
 		allhistory = RawData.query.all()
 	except Exception as e:
 		allhistory = ""
-		logging.error("fail to get data " + e)
+		logger.error("fail to get data " + e)
 		writeLogs("Error: " + e)
 
 	if request.method == 'GET':

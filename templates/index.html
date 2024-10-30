@@ -93,7 +93,7 @@
                   <h3>Total RM<span id="total">0.0</span></h3>
 		  <div class="btn-group">
 			<br><a href="/history"><button class="btn"><i class="fa fa-history"></i> History</button></a>
-		    <br><button onclick="sendToPrinter()" class="btn margin-right" style="inline-block;"><i class="fa fa-print"></i> Print</button>
+		    <br><button onclick="sendToPrinter()" class="btn margin-right" style="display:inline-block"><i class="fa fa-print"></i> Print</button>
 		    <br><button onclick="sendToDb()" class="btn"><i class="fa fa-save"></i> Save</button>
 		  </div>
 		</div>
@@ -180,6 +180,10 @@
 						if(data.status == 200){
 							reset_table();
 						}
+					},
+					error: function(xhr, status, error){
+						alert("Fail to print " + xhr.data.text)
+
 					}
         		});
 			}
